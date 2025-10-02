@@ -8,7 +8,7 @@ A aplicação original é um "Hello World" em PHP. O foco é transformar o proce
 Minha solução cria uma fundação sólida:
 - **Containerização**: Imagem Docker otimizada, multi-stage e segura.
 - **CI**: Pipeline automatizado para build, análise de vulnerabilidades e push da imagem.
-- **IaC e CD**: Provisionamento na AWS com Terraform (escolha oficial: **ECS Fargate**) e estratégia para deploy automático.
+- **IaC e CD**: Provisionamento na AWS com Terraform e estratégia para deploy automático.
 - **Observabilidade**: Plano de monitoramento com stack nativa AWS.
 
 ##  Estrutura do Repositório
