@@ -60,4 +60,4 @@ jobs:
           push: true # Agora faz o push
           tags: |
             ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}
-            ${{ env.DOCKER_IMAGE }}:latest # Também faz o push com a tag 'latest'
+            ${{ env.DOCKER_IMAGE }}:latest # Também faz o push com a tag 'latest' <-- O erro está aqui!
