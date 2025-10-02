@@ -1,8 +1,8 @@
 # ==============================================================================
 # STAGE 1: BUILDER (Usa Alpine, mais leve e seguro)
 # ==============================================================================
-# CORREÇÃO AQUI: A tag correta no Docker Hub inclui a versão do Alpine (ex: alpine3.18)
-FROM php:8.2-cli-alpine3.18 AS builder
+# CORREÇÃO AQUI: Usando a tag simples e estável '8.2-cli-alpine'
+FROM php:8.2-cli-alpine AS builder
 
 # Define o diretório de trabalho do builder
 WORKDIR /app
@@ -16,8 +16,8 @@ COPY ./app/ ./
 # ==============================================================================
 # STAGE 2: PRODUCTION (Imagem final de execução)
 # ==============================================================================
-# CORREÇÃO AQUI: Usando php:8.2-apache-alpine3.18 para a imagem final de produção.
-FROM php:8.2-apache-alpine3.18 AS production
+# CORREÇÃO AQUI: Usando a tag simples e estável '8.2-apache-alpine'
+FROM php:8.2-apache-alpine AS production
 
 # Define o diretório de trabalho do Apache
 WORKDIR /var/www/html
