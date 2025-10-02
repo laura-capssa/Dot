@@ -14,6 +14,13 @@ spec:
     spec:
       containers:
       - name: php-container
-        image: meu-usuario/meu-projeto-devops:latest
+        image: php:8.2-apache
         ports:
         - containerPort: 80
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"

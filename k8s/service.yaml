@@ -2,10 +2,15 @@ apiVersion: v1
 kind: Service
 metadata:
   name: php-service
+  namespace: default
 spec:
-  type: LoadBalancer
+  type: LoadBalancer  # Cria ELB público; para interno, use ClusterIP
   selector:
-    app: php-app
+    app: php-app  # Seleciona os pods do deployment
   ports:
-    - port: 80
-      targetPort: 80
+  - port: 80  # Porta externa
+    targetPort: 80  # Porta do container
+    protocol: TCP
+  # Opcional: Anotação para usar ALB em vez de Classic LB (mais eficiente)
+  # annotations:
+  #   service.beta.kubernetes.io/aws-load-balancer-type: "nlb"  # Ou "alb" para Application LB
