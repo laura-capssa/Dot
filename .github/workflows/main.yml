@@ -8,7 +8,7 @@ on:
 env:
   
   DOCKER_IMAGE: ${{ secrets.DOCKER_USERNAME }}/php-hello-app 
-  DOCKER_TAG: ${{ github.sha }} # Usaremos o SHA do commit como tag para garantir unicidade
+  DOCKER_TAG: ${{ github.sha }} 
 
 jobs:
   build_and_scan:
@@ -58,4 +58,4 @@ jobs:
           push: true 
           tags: |
             ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}
-            ${{ env.DOCKER_IMAGE }}:latest # Também faz o push com a tag 'latest'
+            ${{ env.DOCKER_IMAGE }}:latest 
