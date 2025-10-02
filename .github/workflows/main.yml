@@ -3,10 +3,10 @@ name: CI - Build, Scan e Push da Imagem Docker
 on:
   push:
     branches:
-      - main # Aciona o pipeline em pushs para a branch principal
+      - main 
 
 env:
-  # DOCKER_IMAGE usa o seu DOCKER_USERNAME para garantir o push correto
+  
   DOCKER_IMAGE: ${{ secrets.DOCKER_USERNAME }}/php-hello-app 
   DOCKER_TAG: ${{ github.sha }} # Usaremos o SHA do commit como tag para garantir unicidade
 
@@ -14,50 +14,48 @@ jobs:
   build_and_scan:
     runs-on: ubuntu-latest
     steps:
-      # 1. Checkout do Código
+      
       - name: Checkout do Repositório
         uses: actions/checkout@v4
 
-      # 2. Login no Docker Hub
+      
       - name: Login no Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # 3. Setup do Buildx (Melhora a performance do build)
+      
       - name: Setup Buildx
         uses: docker/setup-buildx-action@v3
 
-      # 4. Construir a imagem Docker
-      # O flag 'load: true' é crucial para que o scanner (Trivy) consiga acessar a imagem localmente.
+      
       - name: Construir Imagem Docker
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./Dockerfile
-          push: false # Não faz o push ainda
+          push: false 
           tags: ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}
-          load: true # Carrega a imagem localmente para o próximo passo
-
-      # 5. Análise de Vulnerabilidades (Passo CORRIGIDO)
+          load: true 
+      
       - name: Run Trivy vulnerability scanner
-        # Usamos uma versão estável e mantida.
+        
         uses: aquasecurity/trivy-action@0.12.0
         with:
           image-ref: ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}
           format: 'table'
-          # Define que o CI deve FALHAR se encontrar vulnerabilidades CRÍTICAS ou ALTAS
+          
           exit-code: '1' 
           severity: 'CRITICAL,HIGH'
 
-      # 6. Fazer o Push da Imagem (Somente se o scan passar)
+      
       - name: Fazer Push da Imagem para o Docker Hub
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./Dockerfile
-          push: true # Agora faz o push
+          push: true 
           tags: |
             ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}
-            ${{ env.DOCKER_IMAGE }}:latest # Também faz o push com a tag 'latest' <-- O erro está aqui!
+            ${{ env.DOCKER_IMAGE }}:latest # Também faz o push com a tag 'latest'
