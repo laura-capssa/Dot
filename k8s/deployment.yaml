@@ -3,6 +3,7 @@ kind: Deployment
 metadata:
   name: php-app
 spec:
+  # Define o número de réplicas do pod
   replicas: 2
   selector:
     matchLabels:
@@ -14,9 +15,12 @@ spec:
     spec:
       containers:
       - name: php-container
+        # Imagem do container
         image: php:8.2-apache
+        # Porta exposta pelo container
         ports:
         - containerPort: 80
+        # Recursos solicitados e limites para gerenciamento de CPU/memória
         resources:
           requests:
             memory: "128Mi"

@@ -1,3 +1,4 @@
+# Define a versão mínima do Terraform e providers necessários
 terraform {
   required_version = ">= 1.0.0"
 
@@ -9,6 +10,7 @@ terraform {
   }
 }
 
+# Configuração do provider AWS
 provider "aws" {
   region                      = var.region
   access_key                  = "fake"

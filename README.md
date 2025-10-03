@@ -9,7 +9,7 @@ Minha solução cria uma fundação sólida:
 - **Containerização**: Imagem Docker otimizada, multi-stage e segura.
 - **CI**: Pipeline automatizado para build, análise de vulnerabilidades e push da imagem.
 - **IaC e CD**: Provisionamento na AWS com Terraform e estratégia para deploy automático.
-- **Observabilidade**: Plano de monitoramento nativa AWS além de uma segund aopção mais em conta, utilizando Prometheus e Grafana.
+- **Observabilidade**: Plano de monitoramento com stack nativa AWS.
 
 ##  Estrutura do Repositório
 ```
@@ -20,7 +20,7 @@ Minha solução cria uma fundação sólida:
 │   └── index.php
 ├── ecs/                           # Definições ECS
 │   └── task-definition.json
-├── k8s/                           # Manifests Kubernetes
+├── k8s/                           # Manifests Kubernetes (opcional)
 │   ├── deployment.yaml
 │   └── service.yaml
 ├── terraform/                     # Definições de infraestrutura IaC
@@ -113,125 +113,35 @@ Incluí também:
 * **ECS**: `ecs/task-definition.json` (porta 80, logs no CloudWatch).
 * **K8s (opcional)**: Deployment com probes e Service tipo LoadBalancer.
 
-###  Como funcionaria o CD
+### Extensão para CD
 
-**Configuração das credenciais da AWS**  
-O pipeline teria acesso a um usuário IAM com permissões mínimas para ECS, Fargate e Terraform. Assim, cada execução teria autorização controlada para atualizar a infraestrutura.  
+O `main.yml` pode ser estendido com:
 
-**Provisionamento ou atualização da infraestrutura**  
-O Terraform seria executado dentro do pipeline para garantir que a infraestrutura esteja criada ou atualizada, mantendo consistência entre ambientes (dev, teste e produção).  
+1. Configuração de credenciais AWS (`aws-actions/configure-aws-credentials`)
+2. `terraform apply` para provisionar/atualizar
+3. `ecs render-task-definition` + `ecs deploy-task-definition` para atualizar a imagem
+4. Health check do ALB
 
-**Atualização da aplicação no ECS Fargate**  
-Após o build da nova imagem, a definição da tarefa seria atualizada para usar a imagem mais recente publicada no Docker Hub. O serviço ECS aplicaria essa nova configuração.  
-
-**Deploy automatizado com estratégia segura**  
-O ECS faria um *rolling update*, substituindo gradualmente as tasks antigas pelas novas, sem downtime. Durante esse processo, apenas versões saudáveis da aplicação seriam mantidas em execução.  
-
-**Health check e verificação**  
-Após o deploy, seria feita uma checagem automática para confirmar se a aplicação está respondendo corretamente no Load Balancer (ALB). Caso algo falhe, é possível acionar um rollback para a versão anterior.  
+**Estratégia:** Rolling update sem downtime, rollback manual se falhar.
 
 ---
 
 ## Etapa 4: Estratégia de Observabilidade
 
+* **Stack escolhida**:
 
-### Opção 1: AWS CloudWatch (Solução Gerenciada)
+  * AWS CloudWatch (logs e métricas)
+  * AWS X-Ray (tracing de requests PHP)
+* **Por quê**: Simplicidade, cobrança sob demanda, integração automática com ECS.
+* **Alternativa**: Prometheus + Grafana para reduzir custos em escala.
 
-**Componentes Principais:**
-- **CloudWatch Logs**: Coleta centralizada de logs da aplicação e infraestrutura
-- **CloudWatch Metrics**: Monitoramento de métricas de performance e recursos
-- **AWS X-Ray**: Rastreamento distribuído para analisar o journey completo das requisições PHP
-- **CloudWatch Canaries**: Sistema de alertas inteligentes com múltiplas condições
-- **SNS**: Notificações em tempo real para a equipe
+**3 Métricas principais para o dashboard:**
 
-**Vantagens:**
-- Integração nativa com todos serviços AWS
-- Configuração mínima e rápida implementação
-- Modelo de custo sob demanda
-- Alta disponibilidade gerenciada pela AWS
-- Zero manutenção de infraestrutura
+1. Latência de resposta (p95) no ALB
+2. Utilização de CPU e memória no ECS
+3. Erros HTTP 5xx
 
----
-
-### Opção 2: Prometheus + Grafana (Solução Open Source)
-
-**Componentes Principais:**
-- **Prometheus**: Coleta e armazenamento de métricas com query language poderosa
-- **Grafana**: Visualização através de dashboards altamente customizáveis
-- **Alertmanager**: Sistema de gerenciamento de alertas
-- **Node Exporter**: Coleta de métricas de nível de sistema operacional
-
-**Vantagens:**
-- Redução significativa de custos em ambiente de grande escala
-- Flexibilidade total para customizações específicas
-- Controle completo sobre retenção e processamento de dados
-- Comunidade ativa e suporte colaborativo
-
----
-
-## Métricas Principais para Dashboard
-
-### 1. Latência de Resposta
-- Representa a experiência real do usuário final. Enquanto a média pode mascarar problemas, o p95 revela como os usuários mais impactados estão experienciando a aplicação.
-
-### 2. Utilização de Recursos 
-- Prevenção proativa de gargalos e otimização de custos. Monitorar tendências ajuda no planejamento de capacidade e identificação de memory leaks.
-
-### 3. Taxa de Erros HTTP
-- Indicador direto da saúde da aplicação. Erros 5xx representam falhas do lado do servidor que impactam diretamente a experiência do usuário
-
----
-
-## Sistema de Alarmes e Notificações
-
-**Estratificação por Severidade:**
-- **Crítico:** Notificações imediatas via SMS e email para o time de plantão
-- **Alerta:** Notificações por email para o time de desenvolvimento
-- **Informativo:** Notificações em canais de comunicação corporativos
-
----
-
-##  Dashboard de Saúde da Aplicação
-
-### Seção de Performance do Usuário
-- Visualização em tempo real do tempo de resposta
-- Comparativo entre percentis (p50, p95, p99)
-- Taxa de requisições bem-sucedidas versus com erro
-- Mapas de calor de performance por região geográfica
-
-### Seção de Saúde da Infraestrutura
-- Utilização de recursos em formato de tendência
-- Capacidade disponível versus utilizada
-- Métricas de rede e operações de I/O
-- Correlação entre métricas de infraestrutura e performance
-
-### Seção de Métricas de Negócio
-- Disponibilidade do serviço em porcentagem
-- Conformidade com SLAs estabelecidos
-- Impacto estimado em usuários durante incidentes
-- Tempo médio entre falhas e tempo médio de recuperação
-- 
----
-
-## Resposta a Incidentes
-
-**Cenário: Alta Latência**
-1. Verificar se o aumento é generalizado ou específico
-2. Correlacionar com métricas de recursos
-3. Analisar traces para identificar gargalos
-4. Escalar recursos ou otimizar código conforme necessário
-
-**Cenário: Aumento de Erros 5xx**
-1. Identificar padrões temporais ou geográficos
-2. Correlacionar com deploys recentes
-3. Verificar health checks e dependências
-4. Implementar rollback se necessário
-
-**Cenário: Alta Utilização de Recursos**
-1. Diferenciar entre uso legítimo e problemas
-2. Identificar processos ou funcionalidades específicas
-3. Analisar queries de banco e chamadas externas
-4. Escalar horizontalmente ou otimizar
+Alarmes via SNS notificam incidentes.
 
 ---
 
@@ -280,6 +190,6 @@ Esta solução moderniza a aplicação PHP, substituindo deploys manuais por uma
 * **IaC + CD** acelera entregas e mantém consistência
 * **Observabilidade** garante monitoramento da saúde
 
-O repositório está pronto para evoluir conforme a aplicação cresce 🚀
+O repositório está pronto para evoluir conforme a aplicação cresce 
 
 ```
